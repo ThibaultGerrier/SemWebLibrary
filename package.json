@@ -1,0 +1,20 @@
+{
+  "name": "semweblibrary",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "latest",
+    "config": "latest",
+    "express": "latest",
+    "mongoose": "^5.0.17",
+    "morgan": "latest",
+    "request": "^2.85.0",
+    "xml2js": "latest"
+  }
+}
