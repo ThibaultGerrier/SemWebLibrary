@@ -11,16 +11,12 @@ const bookModel = new mongoose.Schema({
     }],
     gutenbergId: { type: String },
     bookings: [{
-        user: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'users',
-        },
     }],
     buys: [{
-        user: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'users',
-        },
     }],
     totalQuantify: { type: Number },
     availableQuantify: { type: Number },
