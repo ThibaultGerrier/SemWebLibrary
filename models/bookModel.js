@@ -51,6 +51,7 @@ const bookModel = new mongoose.Schema({
         },
     }],
     averageRating: { type: Number }, // from 0 to 5
+    audioBook: Boolean,
 }, { versionKey: false });
 
 module.exports = mongoose.model('books', bookModel);

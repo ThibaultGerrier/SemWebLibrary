@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const mongoose = require('mongoose');
 
 const bookRouter = require('./routes/books');
+const audioBookRouter = require('./routes/audioBooks');
 const userRouter = require('./routes/users');
 const authorRouter = require('./routes/authors');
 
@@ -19,6 +20,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/books', bookRouter);
+app.use('/audioBooks', audioBookRouter);
 app.use('/authors', authorRouter);
 app.use('/users', userRouter);
 

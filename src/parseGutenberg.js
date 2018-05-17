@@ -68,6 +68,7 @@ const nextStep = (xmlObjects) => {
                         url: o['pgterms:file'][0].$['rdf:about'],
                     })),
                 authorGutenbergId: authorId,
+                audioBook: bookObj['dcterms:type'][0]['rdf:Description'][0]['rdf:value'][0]._ === 'Sound',
             });
         }
     });
