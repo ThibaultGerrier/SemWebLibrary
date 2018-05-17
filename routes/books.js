@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/', (req, res) => {
     // TODO filtering, sorting, limit, offset
     Books.find({}, {
-        _id: 0, downloadOptions: 0, bookings: 0, buys: 0, totalQuantify: 0,
+        _id: 0, downloadOptions: 0, bookings: 0, buys: 0, totalQuantify: 0, author:0,
     }, (err, books) => {
         res.json(books);
     });
@@ -19,7 +19,7 @@ router.get('/search', (req, res) => {
         return
     }
     Books.find({name:{$regex: ".*"+req.query.q+".*", $options:"i"}}, {
-        _id: 0, downloadOptions: 0, bookings: 0, buys: 0, totalQuantify: 0,
+        _id: 0, downloadOptions: 0, bookings: 0, buys: 0, totalQuantify: 0, author:0,
     }, (err, books) => {
         res.json(books);
     });
