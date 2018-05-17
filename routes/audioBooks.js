@@ -18,8 +18,7 @@ router.get('/search', (req, res) => {
         res.status(400).json({ message: 'missing query parameters', status: 'NOT OK' });
         return
     }
-    Books.find({name:{$regex: ".*"+req.query.q+".*", $options:"i"}, audioBook: true
-    }}, {
+    Books.find({name:{$regex: ".*"+req.query.q+".*", $options:"i"}, audioBook: true}, {
         _id: 0, downloadOptions: 0, bookings: 0, buys: 0, totalQuantify: 0,
     }, (err, books) => {
         res.json(books);
