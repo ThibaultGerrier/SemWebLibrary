@@ -4,12 +4,36 @@ const User = require('../models/userModel');
 
 const router = express.Router();
 
+let CONFIG = require('../config/default.json');
+
+const liveUrl = CONFIG.liveUrl;
+
+const setRes = (res) => {
+    res.set('Link', `<${liveUrl}/api/vocab>; rel="http://www.w3.org/ns/hydra/core#apiDocumentation"`);
+    res.contentType('application/ld+json');
+};
+
 router.get('/', (req, res) => {
     // TODO filtering, sorting, limit, offset
     Books.find({}, {
         _id: 0, downloadOptions: 0, bookings: 0, buys: 0, totalQuantify: 0, author: 0,
     }, (err, books) => {
-        res.json(books);
+        setRes(res);
+        const e = {
+            '@context': '/api/contexts/BookCollection.jsonld',
+            '@id': '/api/books/',
+            '@type': 'BookCollection',
+            members: [
+            ],
+        };
+        books.forEach(function(b){
+            let temp={
+                '@id': '/api/books/'+b.gutenbergId,
+                '@type': 'http://schema.org/Book',
+            };
+            e.members.push(temp)
+        });
+        res.send(e);
     });
 });
 
@@ -29,7 +53,31 @@ router.get('/:bookId', (req, res) => {
     Books.findOne({ gutenbergId: req.params.bookId }, {
         _id: 0, downloadOptions: 0, bookings: 0, buys: 0, totalQuantify: 0,
     }, (err, book) => {
-        res.json(book);
+        setRes(res);
+        let authName=null;
+        if(!book){
+            const e = {
+                '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+                "@type": "Status",
+                "statusCode": 404,
+                "title": "Book not found",
+                "description": "Sorry, this book is not in our library",
+            };
+            res.send(e);
+            return;
+        }
+        if(book.author){
+            authName=book.author.name;
+        }
+        const e = {
+            '@context': 'http://schema.org/',
+            '@id': '/api/books/'+req.params.bookId,
+            '@type': 'Book',
+            name : book.name,
+            price: book.price,
+            author: authName,
+        };
+        res.send(e);
     });
 });
 
