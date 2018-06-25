@@ -146,6 +146,16 @@ app.get('/api/vocab', (req, res) => {
                         returns: 'http://schema.org/Book',
                         statusCodes: [],
                     },
+                    {
+                        '@id': '_:book_buy',
+                        '@type': 'hydra:Operation',
+                        method: 'POST',
+                        label: 'Buy a Book entity',
+                        description: 'Buy a book by giving your username and password',
+                        expects: null,
+                        returns: 'http://schema.org/Book',
+                        statusCodes: [],
+                    },
                 ],
                 supportedProperty: [
                     {
@@ -158,6 +168,7 @@ app.get('/api/vocab', (req, res) => {
                     },
                 ],
             },
+            //*************ENTRYPOINT***********************************
             {
                 '@id': 'vocab:EntryPoint',
                 '@type': 'hydra:Class',
@@ -176,7 +187,9 @@ app.get('/api/vocab', (req, res) => {
                         statusCodes: [],
                     },
                 ],
+                //******ENTRYPOINTPROPERTIES****************
                 supportedProperty: [
+                    //**************ENRTRYBOOKS***********************
                     {
                         property: {
                             '@id': 'vocab:EntryPoint/books',
@@ -204,37 +217,94 @@ app.get('/api/vocab', (req, res) => {
                         readonly: true,
                         writeonly: false,
                     },
-                ],
-            },
-            {
-                '@id': 'vocab:BookCollection',
-                '@type': 'hydra:Class',
-                subClassOf: 'http://www.w3.org/ns/hydra/core#Collection',
-                label: 'BookCollection',
-                description: 'A collection of books',
-                supportedOperation: [
+                    //**********ENTRYAUDIOBOOKS****************
                     {
-                        '@id': '_:book_collection_retrieve',
-                        '@type': 'hydra:Operation',
-                        method: 'GET',
-                        label: 'Retrieves all Book entities',
-                        description: null,
-                        expects: null,
-                        returns: 'vocab:BookCollection',
-                        statusCodes: [],
-                    },
-                ],
-                supportedProperty: [
-                    {
-                        property: 'http://www.w3.org/ns/hydra/core#member',
-                        'hydra:title': 'members',
-                        'hydra:description': 'The books',
+                        property: {
+                            '@id': 'vocab:EntryPoint/audioBooks',
+                            '@type': 'hydra:Link',
+                            label: 'audiobooks',
+                            description: 'The audio books collection',
+                            domain: 'vocab:EntryPoint',
+                            range: 'vocab:BookCollection',
+                            supportedOperation: [
+                                {
+                                    '@id': '_:audiobook_collection_retrieve',
+                                    '@type': 'hydra:Operation',
+                                    method: 'GET',
+                                    label: 'Retrieves all audio-book entities',
+                                    description: null,
+                                    expects: null,
+                                    returns: 'vocab:BookCollection',
+                                    statusCodes: [],
+                                },
+                            ],
+                        },
+                        'hydra:title': 'audiobooks',
+                        'hydra:description': 'The audiobooks collection',
                         required: null,
-                        readonly: false,
+                        readonly: true,
                         writeonly: false,
                     },
+                    //**********ENTRYUSERS****************
+                    {
+                        property: {
+                            '@id': 'vocab:EntryPoint/users',
+                            '@type': 'hydra:Link',
+                            label: 'audiobooks',
+                            description: 'The user collection',
+                            domain: 'vocab:EntryPoint',
+                            range: 'vocab:UserCollection',
+                            supportedOperation: [
+                                {
+                                    '@id': '_:user_collection_retrieve',
+                                    '@type': 'hydra:Operation',
+                                    method: 'GET',
+                                    label: 'Retrieves user entities',
+                                    description: null,
+                                    expects: null,
+                                    returns: 'vocab:UserCollection',
+                                    statusCodes: [],
+                                },
+                            ],
+                        },
+                        'hydra:title': 'users',
+                        'hydra:description': 'The user collection',
+                        required: null,
+                        readonly: true,
+                        writeonly: false,
+                    },
+
+                    //**********ENTRYAUTHORS****************
+                    {
+                        property: {
+                            '@id': 'vocab:EntryPoint/authors',
+                            '@type': 'hydra:Link',
+                            label: 'authors',
+                            description: 'The authors collection',
+                            domain: 'vocab:EntryPoint',
+                            range: 'vocab:AuthorCollection',
+                            supportedOperation: [
+                                {
+                                    '@id': '_:authors_collection_retrieve',
+                                    '@type': 'hydra:Operation',
+                                    method: 'GET',
+                                    label: 'Retrieves all authors entities',
+                                    description: null,
+                                    expects: null,
+                                    returns: 'vocab:AuthorCollection',
+                                    statusCodes: [],
+                                },
+                            ],
+                        },
+                        'hydra:title': 'authors',
+                        'hydra:description': 'The authors collection',
+                        required: null,
+                        readonly: true,
+                        writeonly: false,
+                    },
+
                 ],
-            },
+            }
         ],
     };
     res.send(e);
@@ -252,9 +322,32 @@ app.get('/api/contexts/BookCollection.jsonld', (req, res) => {
     };
     res.send(e);
 });
+app.get('/api/contexts/UserCollection.jsonld', (req, res) => {
+    setRes(res);
+    const e = {
+        '@context': {
+            hydra: 'http://www.w3.org/ns/hydra/core#',
+            vocab: `${liveUrl}/api/vocab#`,
+            UserCollection: 'vocab:UserCollection',
+            members: 'http://www.w3.org/ns/hydra/core#member',
+        },
+    };
+    res.send(e);
+});
+app.get('/api/contexts/AuthorCollection.jsonld', (req, res) => {
+    setRes(res);
+    const e = {
+        '@context': {
+            hydra: 'http://www.w3.org/ns/hydra/core#',
+            vocab: `${liveUrl}/api/vocab#`,
+            AuthorCollection: 'vocab:AuthorCollection',
+            members: 'http://www.w3.org/ns/hydra/core#member',
+        },
+    };
+    res.send(e);
+});
 
 app.get('/api', (req, res) => {
-    console.log('yess');
     setRes(res);
     const e = {
         '@context': '/api/contexts/EntryPoint.jsonld',
