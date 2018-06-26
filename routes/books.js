@@ -53,7 +53,7 @@ router.get('/:bookId', (req, res) => {
         _id: 0, downloadOptions: 0, bookings: 0, buys: 0, totalQuantify: 0,
     }, (err, book) => {
         setRes(res);
-        let authName=null;
+        let authID=null;
         if(!book){
             const e = {
                 '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
@@ -66,23 +66,33 @@ router.get('/:bookId', (req, res) => {
             return;
         }
         if(book.author){
-            authName=book.author.name;
+            authID='/api/authors/'+book.authorGutenbergId;
         }
         const e = {
             '@context': 'http://schema.org/',
-            '@id': '/api/books/'+req.params.bookId,
+            '@id': '/api/books/' + req.params.bookId,
             '@type': 'Book',
-            name : book.name,
+            name: book.name,
             price: book.price,
-            author: authName,
+            author: authID,
+            comments:'/api/books/' + req.params.bookId+'/comments',
         };
+
         res.send(e);
     });
 });
 
-router.post('/:bookId/buy', (req, res) => {
+router.post('/:bookId', (req, res) => { //buy
+    setRes(res);
     if (!req.body.username || !req.body.password) {
-        res.status(400).json({ message: 'missing username or password', status: 'NOT OK' });
+        const e = {
+            '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+            "@type": "Status",
+            "statusCode": 404,
+            "title": "User not found",
+            "description": "Sorry, username or password wrong",
+        };
+        res.send(e);
         return;
     }
 
@@ -97,28 +107,67 @@ router.post('/:bookId/buy', (req, res) => {
                             book.availableQuantify--;
                             book.totalQuantify--;
                             book.save();
-                            const result = {
+                            const e = {
+                                '@context': 'http://schema.org/',
+                                '@id': '/api/books/' + req.params.bookId,
+                                '@type': 'Book',
                                 name: book.name,
-                                downloadOptions: book.downloadOptions,
+                                associatedMedia:book.downloadOptions.map(function(b){
+                                   const r = {
+                                       encodingFormat: b.type,
+                                       contentUrl:b.url
+                                   };
+                                   return r;
+                                }),
                             };
-                            res.json(result);
+
+                            res.send(e);
                         } else {
-                            res.status(400).json({ message: 'book not in stock', status: 'NOT OK' });
+                            const e = {
+                                '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+                                "@type": "Status",
+                                "statusCode": 404,
+                                "title": "Book not found",
+                                "description": "Sorry, not in stock",
+                            };
+                            res.send(e);
                         }
                     } else {
-                        res.status(400).json({ message: 'book not found', status: 'NOT OK' });
+                        const e = {
+                            '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+                            "@type": "Status",
+                            "statusCode": 404,
+                            "title": "Book not found",
+                            "description": "Sorry, book not found",
+                        };
+                        res.send(e);
                     }
                 },
             );
         } else {
-            res.status(400).json({ message: 'error getting user.. check your input', status: 'NOT OK' });
+            const e = {
+                '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+                "@type": "Status",
+                "statusCode": 404,
+                "title": "User not found",
+                "description": "Sorry, username not found. check your input",
+            };
+            res.send(e);
         }
     });
 });
 
-router.post('/:bookId/rent', (req, res) => {
+router.patch('/:bookId', (req, res) => { //rent
+    setRes(res);
     if (!req.body.username || !req.body.password) {
-        res.status(400).json({ message: 'missing username or password', status: 'NOT OK' });
+        const e = {
+            '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+            "@type": "Status",
+            "statusCode": 400,
+            "title": "User not found",
+            "description": "Sorry, username and password required",
+        };
+        res.send(e);
         return;
     }
 
@@ -132,23 +181,54 @@ router.post('/:bookId/rent', (req, res) => {
                             book.bookings.push(existingUser._id);
                             book.availableQuantify--;
                             book.save();
-                            const result = {
-                                name: book.name,
-                                downloadOptions: book.downloadOptions,
-                            };
                             existingUser.currentBooks.push(book._id);
                             existingUser.save();
-                            res.json(result);
+
+                            const e = {
+                                '@context': 'http://schema.org/',
+                                '@id': '/api/books/' + req.params.bookId,
+                                '@type': 'Book',
+                                name: book.name,
+                                associatedMedia:book.downloadOptions.map(function(b){
+                                    const r = {
+                                        encodingFormat: b.type,
+                                        contentUrl:b.url
+                                    };
+                                    return r;
+                                }),
+                            };
+                            res.send(e);
                         } else {
-                            res.status(400).json({ message: 'book not in stock', status: 'NOT OK' });
+                            const e = {
+                                '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+                                "@type": "Status",
+                                "statusCode": 404,
+                                "title": "Book not found",
+                                "description": "Sorry, book not in stock",
+                            };
+                            res.send(e);
                         }
                     } else {
-                        res.status(400).json({ message: 'book not found', status: 'NOT OK' });
+                        const e = {
+                            '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+                            "@type": "Status",
+                            "statusCode": 404,
+                            "title": "Book not found",
+                            "description": "Sorry, book not found",
+                        };
+                        res.send(e);
                     }
                 },
             );
         } else {
-            res.status(400).json({ message: 'error getting user.. check your input', status: 'NOT OK' });
+            const e = {
+                '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+                "@type": "Status",
+                "statusCode": 400,
+                "title": "User not found",
+                "description": "Error getting user, please check your input",
+            };
+            res.send(e);
         }
     });
 });
@@ -216,9 +296,17 @@ router.post('/:bookId/rate', (req, res) => {
     });
 });
 
-router.post('/:bookId/return', (req, res) => {
+router.put('/:bookId/', (req, res) => { //return
+    setRes(res);
     if (!req.body.username || !req.body.password) {
-        res.status(400).json({ message: 'missing username or password', status: 'NOT OK' });
+        const e = {
+            '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+            "@type": "Status",
+            "statusCode": 400,
+            "title": "User not found",
+            "description": "Error: username and password required",
+        };
+        res.send(e);
         return;
     }
 
@@ -235,17 +323,45 @@ router.post('/:bookId/return', (req, res) => {
                             book.save();
 
                             existingUser.save();
-                            res.status(200).json({ message: 'Thank you for returning the book', status: 'OK' });
+                            const e = {
+                                '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+                                "@type": "Status",
+                                "statusCode": 200,
+                                "title": "Successful",
+                                "description": "Thank you for returning the book!",
+                            };
+                            res.send(e);
                         } else {
-                            res.status(400).json({ message: 'you do not have the book', status: 'NOT OK' });
+                            const e = {
+                                '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+                                "@type": "Status",
+                                "statusCode": 400,
+                                "title": "Not allowed",
+                                "description": "You do not have the book",
+                            };
+                            res.send(e);
                         }
                     } else {
-                        res.status(400).json({ message: 'book not found', status: 'NOT OK' });
+                        const e = {
+                            '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+                            "@type": "Status",
+                            "statusCode": 404,
+                            "title": "Not found",
+                            "description": "Error: username and password required incorrect",
+                        };
+                        res.send(e);
                     }
                 },
             );
         } else {
-            res.status(400).json({ message: 'error getting user.. check your input', status: 'NOT OK' });
+            const e = {
+                '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+                "@type": "Status",
+                "statusCode": 400,
+                "title": "Book not found",
+                "description": "Error getting user, please check your input",
+            };
+            res.send(e);
         }
     });
 });

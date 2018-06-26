@@ -3,15 +3,39 @@ const User = require('../models/userModel');
 
 const router = express.Router();
 
+let CONFIG = require('../config/default.json');
+
+const liveUrl = CONFIG.liveUrl;
+
+const setRes = (res) => {
+    res.set('Link', `<${liveUrl}/api/vocab>; rel="http://www.w3.org/ns/hydra/core#apiDocumentation"`);
+    res.contentType('application/ld+json');
+};
+
 router.post('/', (req, res) => {
+    setRes(res);
     if (!req.body.username || !req.body.password) {
-        res.status(400).json({ message: 'missing username or password', status: 'NOT OK' });
+        const e = {
+            '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+            "@type": "Status",
+            "statusCode": 404,
+            "title": "Error",
+            "description": "Missing username or password",
+        };
+        res.send(e);
         return;
     }
 
     User.findOne({ username: req.body.username }, (err, existingUser) => {
         if (existingUser) {
-            res.status(400).json({ message: 'username already exists', status: 'NOT OK' });
+            const e = {
+                '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+                "@type": "Status",
+                "statusCode": 404,
+                "title": "Error",
+                "description": "User already exists",
+            };
+            res.send(e);
             return;
         }
         const user = new User({
@@ -26,7 +50,14 @@ router.post('/', (req, res) => {
             password: user.password,
         };
 
-        res.send({ message: 'user created', status: 'OK', user: simplifiedUser });
+        const e = {
+            '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+            "@type": "Status",
+            "statusCode": 200,
+            "title": "Success",
+            "description": "User created",
+        };
+        res.send(e);
     });
 });
 

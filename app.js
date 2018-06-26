@@ -1,33 +1,3 @@
-
-`SUPPORTED ROUTES
-
-GET	/authors/
-GET	/authors/:authorId
-GET	/authors/search?q
-
-POST	/users/
-GET	/users/:userId
-
-GET	    /books/
-GET	    /books/search?q
-GET	    /books/:bookId
-POST	/books/:bookId/buy
-POST	/books/:bookId/rent
-POST	/books/:bookId/return
-POST	/books/:bookId/comment
-POST	/books/:bookId/rate
-
-GET	    /audioBooks/
-GET	    /audioBooks/search?q
-GET	    /audioBooks/:bookId
-POST	/audioBooks/:bookId/buy
-POST	/audioBooks/:bookId/rent
-POST	/audioBooks/:bookId/return
-POST	/audioBooks/:bookId/comment
-POST	/audioBooks/:bookId/rate
-`;
-
-
 const express = require('express');
 const parser = require('body-parser');
 const config = require('config');
@@ -41,6 +11,7 @@ const authorRouter = require('./routes/authors');
 
 const app = express();
 app.use(parser.json());
+app.use(parser.json({type: 'application/ld+json'}));
 app.use(morgan('dev'));
 
 let CONFIG = require('./config/default.json');
@@ -130,6 +101,7 @@ app.get('/api/vocab', (req, res) => {
                 supportedOperation: [],
                 supportedProperty: [],
             },
+            //DESCRIPTION FOR BOOK
             {
                 '@id': 'http://schema.org/Book',
                 '@type': 'hydra:Class',
@@ -150,9 +122,80 @@ app.get('/api/vocab', (req, res) => {
                         '@id': '_:book_buy',
                         '@type': 'hydra:Operation',
                         method: 'POST',
-                        label: 'Buy a Book entity',
-                        description: 'Buy a book by giving your username and password',
-                        expects: null,
+                        label: 'Buy this book',
+                        description: null,
+                        expects: {
+                            supportedProperty:[
+                                {
+                                    property:{
+                                        '@type':'rdf:Property',
+                                        'label':'username'
+                                    },
+                                    required:true
+                                },
+                                {
+                                    property:{
+                                        '@type':'rdf:Property',
+                                        'label':'password'
+                                    },
+                                    required:true
+                                },
+                            ]
+                        },
+                        returns: 'http://schema.org/Book',
+                        statusCodes: [],
+                    },
+                    {
+                        '@id': '_:book_return',
+                        '@type': 'hydra:Operation',
+                        method: 'PUT',
+                        label: 'Return this book',
+                        description: null,
+                        expects: {
+                            supportedProperty:[
+                                {
+                                    property:{
+                                        '@type':'rdf:Property',
+                                        'label':'username'
+                                    },
+                                    required:true
+                                },
+                                {
+                                    property:{
+                                        '@type':'rdf:Property',
+                                        'label':'password'
+                                    },
+                                    required:true
+                                },
+                            ]
+                        },
+                        returns: null,
+                        statusCodes: [],
+                    },
+                    {
+                        '@id': '_:book_rent',
+                        '@type': 'hydra:Operation',
+                        method: 'PATCH',
+                        label: 'Rent this book',
+                        description: null,
+                        expects: {
+                            supportedProperty:[
+                                {
+                                    property:{
+                                        '@type':'rdf:Property',
+                                        'label':'username'
+                                    },
+                                    required:true
+                                },
+                                {
+                                    property:{
+                                        '@type':'rdf:Property',
+                                        'label':'password'
+                                    },
+                                    required:true
+                                },
+                            ]
+                        },
                         returns: 'http://schema.org/Book',
                         statusCodes: [],
                     },
@@ -166,8 +209,236 @@ app.get('/api/vocab', (req, res) => {
                         readonly: false,
                         writeonly: false,
                     },
+                    {
+                        property: 'http://schema.org/price',
+                        'hydra:title': 'price',
+                        'hydra:description': "The book's price",
+                        required: true,
+                        readonly: false,
+                        writeonly: false,
+                    },
+                    {
+                        property: {
+                            '@id':'http://schema.org/comment',
+                            '@type':'hydra:Link',
+                            'label':'comments',
+                            supportedOperation:[
+                                {
+                                    '@id': '_comment_create',
+                                    '@type':'hydra:Operation',
+                                    method: 'POST',
+                                    label: 'create a comment',
+                                    expects: {
+                                        supportedProperty: [
+                                            {
+                                                property: {
+                                                    '@type': 'rdf:Property',
+                                                    'label': 'username'
+                                                },
+                                                required: true
+                                            },
+                                            {
+                                                property: {
+                                                    '@type': 'rdf:Property',
+                                                    'label': 'password'
+                                                },
+                                                required: true
+                                            },
+                                            {
+                                                property: {
+                                                    '@type': 'rdf:Property',
+                                                    'label': 'comment'
+                                                },
+                                                required: true
+                                            },
+                                        ]
+                                    },
+                                },
+                                {
+                                    '@id':'_comment_view',
+                                    '@type':'hydra:Operation',
+                                    method:'GET',
+                                    label:'see all comments',
+                                }
+                            ]
+                        },
+                        'hydra:title':'comments',
+                        'hydra:description':'Add a description to this book'
+                    },
+                    {
+                        property: {
+                            '@type': 'hydra:Link',
+                            'range': 'http://schema.org/Person',
+                            'domain':'http://schema.org/Book',
+                            'description':"The author of the book",
+                        },
+                        'hydra:title': 'author',
+                        'hydra:description': "The author of the book",
+                        required: false,
+                        readonly: true,
+                        writeonly: false,
+
+                    },
                 ],
             },
+
+            //DESCRIPTION FOR AUDIOBOOK
+            {
+                '@id': 'http://schema.org/AudioBook',
+                '@type': 'hydra:Class',
+                'hydra:title': 'AudioBook',
+                'hydra:description': null,
+                supportedOperation: [
+                    {
+                        '@id': '_:audiobook_retrieve',
+                        '@type': 'hydra:Operation',
+                        method: 'GET',
+                        label: 'Retrieves a audiobook entity',
+                        description: null,
+                        expects: null,
+                        returns: 'http://schema.org/Book',
+                        statusCodes: [],
+                    },
+                    {
+                        '@id': '_:audiobook_buy',
+                        '@type': 'hydra:Operation',
+                        method: 'POST',
+                        label: 'Buy this audiobook',
+                        description: null,
+                        expects: {
+                            supportedProperty:[
+                                {
+                                    property:{
+                                        '@type':'rdf:Property',
+                                        'label':'username'
+                                    },
+                                    required:true
+                                },
+                                {
+                                    property:{
+                                        '@type':'rdf:Property',
+                                        'label':'password'
+                                    },
+                                    required:true
+                                },
+                            ]
+                        },
+                        returns: 'http://schema.org/Book',
+                        statusCodes: [],
+                    },
+                    {
+                        '@id': '_:audiobook_return',
+                        '@type': 'hydra:Operation',
+                        method: 'PUT',
+                        label: 'Return this audiobook',
+                        description: null,
+                        expects: {
+                            supportedProperty:[
+                                {
+                                    property:{
+                                        '@type':'rdf:Property',
+                                        'label':'username'
+                                    },
+                                    required:true
+                                },
+                                {
+                                    property:{
+                                        '@type':'rdf:Property',
+                                        'label':'password'
+                                    },
+                                    required:true
+                                },
+                            ]
+                        },
+                        returns: 'http://schema.org/AudioBook',
+                        statusCodes: [],
+                    },
+                    {
+                        '@id': '_:audiobook_rent',
+                        '@type': 'hydra:Operation',
+                        method: 'PATCH',
+                        label: 'Rent this audiobook',
+                        description: null,
+                        expects: {
+                            supportedProperty:[
+                                {
+                                    property:{
+                                        '@type':'rdf:Property',
+                                        'label':'username'
+                                    },
+                                    required:true
+                                },
+                                {
+                                    property:{
+                                        '@type':'rdf:Property',
+                                        'label':'password'
+                                    },
+                                    required:true
+                                },
+                            ]
+                        },
+                        returns: 'http://schema.org/AudioBook',
+                        statusCodes: [],
+                    },
+                ],
+                supportedProperty: [
+                    {
+                        property: 'http://schema.org/name',
+                        'hydra:title': 'name',
+                        'hydra:description': "The audiobook's name",
+                        required: true,
+                        readonly: false,
+                        writeonly: false,
+                    },
+                    {
+                        property: 'http://schema.org/price',
+                        'hydra:title': 'price',
+                        'hydra:description': "The audiobook's price",
+                        required: true,
+                        readonly: false,
+                        writeonly: false,
+                    },
+                ],
+            },
+
+            //DESCRIPTION FOR AUTHORS
+            {
+                '@id': 'http://schema.org/Person',
+                '@type': 'hydra:Class',
+                'hydra:title': 'Person',
+                'hydra:description': null,
+                supportedOperation: [
+                    {
+                        '@id': '_:author_retrieve',
+                        '@type': 'hydra:Operation',
+                        method: 'GET',
+                        label: 'Retrieves an author entity',
+                        description: null,
+                        expects: null,
+                        returns: 'http://schema.org/Person',
+                        statusCodes: [],
+                    },
+                ],
+                supportedProperty: [
+                    {
+                        property: 'http://schema.org/name',
+                        'hydra:title': 'name',
+                        'hydra:description': "The author's name",
+                        required: true,
+                        readonly: false,
+                        writeonly: false,
+                    },
+                    {
+                        property: 'http://schema.org/date',
+                        'hydra:title': 'date',
+                        'hydra:description': "The author's birth date",
+                        required: true,
+                        readonly: false,
+                        writeonly: false,
+                    },
+                ],
+            },
+
             //*************ENTRYPOINT***********************************
             {
                 '@id': 'vocab:EntryPoint',
@@ -211,12 +482,14 @@ app.get('/api/vocab', (req, res) => {
                                 },
                             ],
                         },
+
                         'hydra:title': 'books',
                         'hydra:description': 'The books collection',
                         required: null,
                         readonly: true,
                         writeonly: false,
                     },
+
                     //**********ENTRYAUDIOBOOKS****************
                     {
                         property: {
@@ -225,7 +498,7 @@ app.get('/api/vocab', (req, res) => {
                             label: 'audiobooks',
                             description: 'The audio books collection',
                             domain: 'vocab:EntryPoint',
-                            range: 'vocab:BookCollection',
+                            range: 'vocab:AudioBookCollection',
                             supportedOperation: [
                                 {
                                     '@id': '_:audiobook_collection_retrieve',
@@ -234,7 +507,7 @@ app.get('/api/vocab', (req, res) => {
                                     label: 'Retrieves all audio-book entities',
                                     description: null,
                                     expects: null,
-                                    returns: 'vocab:BookCollection',
+                                    returns: 'vocab:AudioBookCollection',
                                     statusCodes: [],
                                 },
                             ],
@@ -250,7 +523,7 @@ app.get('/api/vocab', (req, res) => {
                         property: {
                             '@id': 'vocab:EntryPoint/users',
                             '@type': 'hydra:Link',
-                            label: 'audiobooks',
+                            label: 'users',
                             description: 'The user collection',
                             domain: 'vocab:EntryPoint',
                             range: 'vocab:UserCollection',
@@ -258,10 +531,27 @@ app.get('/api/vocab', (req, res) => {
                                 {
                                     '@id': '_:user_collection_retrieve',
                                     '@type': 'hydra:Operation',
-                                    method: 'GET',
-                                    label: 'Retrieves user entities',
-                                    description: null,
-                                    expects: null,
+                                    method: 'POST',
+                                    label: 'Add a new user',
+                                    description: 'Add a user',
+                                    expects: {
+                                        supportedProperty:[
+                                            {
+                                                property:{
+                                                    '@type':'rdf:Property',
+                                                    'label':'username'
+                                                },
+                                                required:true
+                                            },
+                                            {
+                                                property:{
+                                                    '@type':'rdf:Property',
+                                                    'label':'password'
+                                                },
+                                                required:true
+                                            },
+                                        ]
+                                    },
                                     returns: 'vocab:UserCollection',
                                     statusCodes: [],
                                 },
@@ -279,7 +569,7 @@ app.get('/api/vocab', (req, res) => {
                         property: {
                             '@id': 'vocab:EntryPoint/authors',
                             '@type': 'hydra:Link',
-                            label: 'authors',
+                            label: 'Person',
                             description: 'The authors collection',
                             domain: 'vocab:EntryPoint',
                             range: 'vocab:AuthorCollection',
@@ -296,7 +586,7 @@ app.get('/api/vocab', (req, res) => {
                                 },
                             ],
                         },
-                        'hydra:title': 'authors',
+                        'hydra:title': 'author',
                         'hydra:description': 'The authors collection',
                         required: null,
                         readonly: true,
@@ -317,6 +607,18 @@ app.get('/api/contexts/BookCollection.jsonld', (req, res) => {
             hydra: 'http://www.w3.org/ns/hydra/core#',
             vocab: `${liveUrl}/api/vocab#`,
             BookCollection: 'vocab:BookCollection',
+            members: 'http://www.w3.org/ns/hydra/core#member',
+        },
+    };
+    res.send(e);
+});
+app.get('/api/contexts/AudioBookCollection.jsonld', (req, res) => {
+    setRes(res);
+    const e = {
+        '@context': {
+            hydra: 'http://www.w3.org/ns/hydra/core#',
+            vocab: `${liveUrl}/api/vocab#`,
+            AudioBookCollection: 'vocab:AudioBookCollection',
             members: 'http://www.w3.org/ns/hydra/core#member',
         },
     };

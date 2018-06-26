@@ -17,9 +17,9 @@ router.get('/', (req, res) => {
     Author.find({}, { _id: 0 }, (err, authors) => {
         setRes(res);
         const e = {
-            '@context': '/api/contexts/BookCollection.jsonld',
-            '@id': '/api/books/',
-            '@type': 'BookCollection',
+            '@context': '/api/contexts/AuthorCollection.jsonld',
+            '@id': '/api/authors/',
+            '@type': 'AuthorCollection',
             members: [
             ],
         };
@@ -27,8 +27,6 @@ router.get('/', (req, res) => {
             let temp={
                 '@id': '/api/authors/'+b.gutenbergId,
                 '@type': 'http://schema.org/Person',
-                'name':b.name,
-                'birthDate':b.birthDate
             };
             e.members.push(temp)
         });
@@ -49,9 +47,29 @@ router.get('/search', (req, res) => {
 });
 
 router.get('/:authorID', (req, res) => {
-    console.log('yesssss');
-    Author.findOne({ gutenbergId: req.params.userId }, { _id: 0 }, (err, author) => {
-        res.json(author);
+    Author.findOne({ gutenbergId: req.params.authorID }, { _id: 0 }, (err, author) => {
+        setRes(res);
+        if(!author){
+            const e = {
+                '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+                "@type": "Status",
+                "statusCode": 404,
+                "title": "Author not found",
+                "description": "Sorry, this author does not exist",
+            };
+            res.send(e);
+            return;
+        }
+
+        const e = {
+            '@context': 'http://schema.org/',
+            '@id': '/api/author/' + req.params.authorID,
+            '@type': 'Person',
+            name: author.name,
+            date: author.birthDate
+        };
+
+        res.send(e);
     });
 });
 
