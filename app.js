@@ -1018,24 +1018,7 @@ app.get('/api/vocab', (req, res) => {
                                     method: 'POST',
                                     label: 'Add a new user',
                                     description: 'Add a user',
-                                    expects: {
-                                        supportedProperty:[
-                                            {
-                                                property:{
-                                                    '@type':'rdf:Property',
-                                                    'label':'username'
-                                                },
-                                                required:true
-                                            },
-                                            {
-                                                property:{
-                                                    '@type':'rdf:Property',
-                                                    'label':'password'
-                                                },
-                                                required:true
-                                            },
-                                        ]
-                                    },
+                                    expects: 'vocab:User',
                                     returns: 'vocab:UserCollection',
                                     statusCodes: [],
                                 },

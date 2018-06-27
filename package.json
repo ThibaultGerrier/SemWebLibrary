@@ -14,6 +14,7 @@
     "express": "latest",
     "mongoose": "^5.0.17",
     "morgan": "latest",
+    "prompt-async": "^0.9.9",
     "request": "^2.85.0",
     "xml2js": "latest"
   }
