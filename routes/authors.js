@@ -1,5 +1,6 @@
 const express = require('express');
 const Author = require('../models/authorModel');
+const Books = require('../models/bookModel');
 
 const router = express.Router();
 let CONFIG = require('../config/default.json');
@@ -10,11 +11,8 @@ const setRes = (res) => {
     res.contentType('application/ld+json');
 };
 
-
-
-
 router.get('/', (req, res) => {
-    Author.find({}, { _id: 0 }, (err, authors) => {
+    Author.find({}, { _id: 0 }, {limit: 100}, (err, authors) => {
         setRes(res);
         const e = {
             '@context': '/api/contexts/AuthorCollection.jsonld',
@@ -26,7 +24,7 @@ router.get('/', (req, res) => {
         authors.forEach(function(b){
             let temp={
                 '@id': '/api/authors/'+b.gutenbergId,
-                '@type': 'http://schema.org/Person',
+                '@type': 'vocab:Author',
             };
             e.members.push(temp)
         });
@@ -46,6 +44,39 @@ router.get('/search', (req, res) => {
     });
 });
 
+// new search
+router.post('/', (req, res) => {
+    if (!req.body.query) {
+        const e = {
+            '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+            "@type": "Status",
+            "statusCode": 404,
+            "title": "No query param",
+        };
+        res.send(e);
+        return;
+    }
+    Author.find({ name: { $regex: `.*${req.body.query}.*`, $options: 'i' } }, {
+        _id: 0,
+    }, {limit: 100}, (err, authors) => {
+        const e = {
+            '@context': '/api/contexts/AuthorCollection.jsonld',
+            '@id': '/api/authors/',
+            '@type': 'AuthorCollection',
+            members: [
+            ],
+        };
+        authors.forEach(function(a){
+            let temp={
+                '@id': '/api/authors/'+a.gutenbergId,
+                '@type': 'vocab:Author',
+            };
+            e.members.push(temp)
+        });
+        res.send(e);
+    });
+});
+
 router.get('/:authorID', (req, res) => {
     Author.findOne({ gutenbergId: req.params.authorID }, { _id: 0 }, (err, author) => {
         setRes(res);
@@ -62,15 +93,38 @@ router.get('/:authorID', (req, res) => {
         }
 
         const e = {
-            '@context': 'http://schema.org/',
+            '@context': liveUrl + '/api/contexts/Author.jsonld',
             '@id': '/api/author/' + req.params.authorID,
-            '@type': 'Person',
+            '@type': 'Author',
             name: author.name,
-            date: author.birthDate
+            date: author.birthDate,
+            books: '/api/authors/' + req.params.authorID + '/books',
         };
 
         res.send(e);
     });
+});
+
+router.get('/:authorID/books', (req, res) => {
+    setRes(res);
+    Books.find({ authorGutenbergId: req.params.authorID }, { _id: 0 },
+        (err, books) => {
+            const e = {
+                '@context': '/api/contexts/BookCollection.jsonld',
+                '@id': '/api/' + req.params.authorID + '/books',
+                '@type': 'BookCollection',
+                members: [
+                ],
+            };
+            books.forEach(function(b){
+                let temp={
+                    '@id': '/api/books/'+b.gutenbergId,
+                    '@type': 'vocab:Book',
+                };
+                e.members.push(temp)
+            });
+            res.send(e);
+        });
 });
 
 module.exports = router;

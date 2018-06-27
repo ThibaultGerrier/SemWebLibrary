@@ -101,6 +101,9 @@ app.get('/api/vocab', (req, res) => {
                 supportedOperation: [],
                 supportedProperty: [],
             },
+
+            // old stuff
+            /*
             //DESCRIPTION FOR BOOK
             {
                 '@id': 'http://schema.org/Book',
@@ -438,6 +441,467 @@ app.get('/api/vocab', (req, res) => {
                     },
                 ],
             },
+            */
+
+            // NEW STUFF
+            // query
+            {
+                "@id": "vocab:Query",
+                "@type": "hydra:Class",
+                "subClassOf": null,
+                "label": "Query",
+                "description": "Query parameter",
+                "supportedProperty": [
+                    {
+                        "property": {
+                            "@id": "vocab:Query/query",
+                            "@type": "rdf:Property",
+                            "label": "query",
+                            "description": "query",
+                            "domain": "vocab:Query",
+                            "range": "http://www.w3.org/2001/XMLSchema#string",
+                            "supportedOperation": []
+                        },
+                        "hydra:title": "query",
+                        "hydra:description": "query",
+                        "required": null,
+                        "readonly": false,
+                        "writeonly": false
+                    },
+                ]
+            },
+
+            // User
+            {
+                "@id": "vocab:User",
+                "@type": "hydra:Class",
+                "subClassOf": null,
+                "label": "User",
+                "description": "A User represents a person registered in the system.",
+                "supportedOperation": [
+                    {
+                        "@id": "_:user_replace",
+                        "@type": "hydra:Operation",
+                        "method": "POST",
+                        "label": "Creates an existing user",
+                        "description": null,
+                        "expects": "vocab:User",
+                        "returns": "vocab:User",
+                    },
+                ],
+                "supportedProperty": [
+                    {
+                        "property": {
+                            "@id": "vocab:User/username",
+                            "@type": "rdf:Property",
+                            "label": "username",
+                            "description": "The user's name",
+                            "domain": "vocab:User",
+                            "range": "http://www.w3.org/2001/XMLSchema#string",
+                            "supportedOperation": []
+                        },
+                        "hydra:title": "username",
+                        "hydra:description": "The user's name",
+                        "required": null,
+                        "readonly": false,
+                        "writeonly": false
+                    },
+                    {
+                        "property": {
+                            "@id": "vocab:User/password",
+                            "@type": "rdf:Property",
+                            "label": "password",
+                            "description": "The user's password",
+                            "domain": "vocab:User",
+                            "range": "http://www.w3.org/2001/XMLSchema#string",
+                            "supportedOperation": []
+                        },
+                        "hydra:title": "password",
+                        "hydra:description": "The user's password",
+                        "required": null,
+                        "readonly": false,
+                        "writeonly": true
+                    },
+                ]
+            },
+
+            // Author
+            {
+                "@id": "vocab:Author",
+                "@type": "hydra:Class",
+                "subClassOf": null,
+                "label": "Author",
+                "description": "A Author of a book",
+                "supportedOperation": [
+                    {
+                        "@id": "_:author_retrieve",
+                        "@type": "hydra:Operation",
+                        "method": "GET",
+                        "label": "Retrieves an author",
+                        "description": null,
+                        "expects": null,
+                        "returns": "vocab:Author",
+                    },
+                ],
+                "supportedProperty": [
+                    {
+                        "property": {
+                            "@id": "vocab:Author/username",
+                            "@type": "rdf:Property",
+                            "label": "name",
+                            "description": "The authors's name",
+                            "domain": "vocab:Author",
+                            "range": "http://www.w3.org/2001/XMLSchema#string",
+                            "supportedOperation": []
+                        },
+                        "hydra:title": "name",
+                        "hydra:description": "The authors's name",
+                        "required": null,
+                        "readonly": false,
+                        "writeonly": false
+                    },
+                    {
+                        "property": {
+                            "@id": "vocab:Author/books",
+                            "@type": "hydra:Link",
+                            "label": "books",
+                            "description": "The books associated with this author",
+                            "domain": "vocab:Author",
+                            "range": "http://www.w3.org/ns/hydra/core#Collection",
+                            "supportedOperation": [
+                                {
+                                    "@id": "_:author_book_collection_retrieve",
+                                    "@type": "hydra:Operation",
+                                    "method": "GET",
+                                    "label": "Retrieves all books for a specific author",
+                                    "description": null,
+                                    "expects": null,
+                                    "returns": "http://www.w3.org/ns/hydra/core#Collection",
+                                    "statusCodes": []
+                                }
+                            ]
+                        },
+                        "hydra:title": "books",
+                        "hydra:description": "The books associated with this author",
+                        "required": null,
+                        "readonly": true,
+                        "writeonly": false
+                    }
+                ]
+            },
+
+            // Book
+            {
+                "@id": "vocab:Book",
+                "@type": "hydra:Class",
+                "subClassOf": null,
+                "label": "Book",
+                "description": "A gutenberg book",
+                "supportedOperation": [
+                    {
+                        "@id": "_:book_buy",
+                        "@type": "hydra:Operation",
+                        "method": "POST",
+                        "label": "Buy a book",
+                        "description": null,
+                        "expects": "vocab:User",
+                        "returns": "vocab:Book",
+                    },
+                    {
+                        "@id": "_:book_rent",
+                        "@type": "hydra:Operation",
+                        "method": "PATCH",
+                        "label": "Rent a book",
+                        "description": null,
+                        "expects": "vocab:User",
+                        "returns": "vocab:Book",
+                    },
+                    {
+                        "@id": "_:book_return",
+                        "@type": "hydra:Operation",
+                        "method": "PUT",
+                        "label": "Return a book",
+                        "description": null,
+                        "expects": "vocab:User",
+                        "returns": null,
+                    },
+                    {
+                        "@id": "_:book_retrieve",
+                        "@type": "hydra:Operation",
+                        "method": "GET",
+                        "label": "Retrieves a Book",
+                        "description": null,
+                        "expects": null,
+                        "returns": "vocab:Book",
+                        "statusCodes": []
+                    }
+                ],
+                "supportedProperty": [
+                    {
+                        "property": {
+                            "@id": "vocab:Book/name",
+                            "@type": "rdf:Property",
+                            "label": "book",
+                            "description": "The books's name",
+                            "domain": "vocab:Book",
+                            "range": "http://www.w3.org/2001/XMLSchema#string",
+                            "supportedOperation": []
+                        },
+                        "hydra:title": "name",
+                        "hydra:description": "The books's name",
+                        "required": null,
+                        "readonly": false,
+                        "writeonly": false
+                    },
+                    {
+                        "property": {
+                            "@id": "vocab:Book/price",
+                            "@type": "rdf:Property",
+                            "label": "price",
+                            "description": "A price of the book",
+                            "domain": "vocab:Book",
+                            "range": "http://www.w3.org/2001/XMLSchema#string",
+                            "supportedOperation": []
+                        },
+                        "hydra:title": "price",
+                        "hydra:description": "A price of the book",
+                        "required": null,
+                        "readonly": false,
+                        "writeonly": false
+                    },
+                    {
+                        "property": {
+                            "@id": "vocab:Book/author",
+                            "@type": "hydra:Link",
+                            "label": "author",
+                            "description": "The author of this book",
+                            "domain": "vocab:Book",
+                            "range": "vocab:Author",
+                            "supportedOperation": [
+                                {
+                                    "@id": "_:author_retrieve",
+                                    "@type": "hydra:Operation",
+                                    "method": "GET",
+                                    "label": "Retrieves an author",
+                                    "description": null,
+                                    "expects": null,
+                                    "returns": "vocab:Author",
+                                    "statusCodes": []
+                                }
+                            ]
+                        },
+                        "hydra:title": "author",
+                        "hydra:description": "The author of the book",
+                        "required": null,
+                        "readonly": true,
+                        "writeonly": false
+                    },
+                    {
+                        "property": {
+                            "@id": "vocab:Book/comments",
+                            "@type": "hydra:Link",
+                            "label": "comments",
+                            "description": "The comments associated with this book",
+                            "domain": "vocab:Book",
+                            "range": "http://www.w3.org/ns/hydra/core#Collection",
+                            "supportedOperation": [
+                                {
+                                    "@id": "_:book_comment_create",
+                                    "@type": "hydra:Operation",
+                                    "method": "POST",
+                                    "label": "Creates a new Comment for a book",
+                                    "description": "To create a new Comment you have to be authenticated.",
+                                    "expects": "vocab:Comment",
+                                    "returns": "vocab:Comment",
+                                },
+                                {
+                                    "@id": "_:book_comment_collection_retrieve",
+                                    "@type": "hydra:Operation",
+                                    "method": "GET",
+                                    "label": "Retrieves all Comment entities for a specific book",
+                                    "description": null,
+                                    "expects": null,
+                                    "returns": "http://www.w3.org/ns/hydra/core#Collection",
+                                    "statusCodes": []
+                                }
+                            ]
+                        },
+                        "hydra:title": "comments",
+                        "hydra:description": "The comments associated with this book",
+                        "required": null,
+                        "readonly": true,
+                        "writeonly": false
+                    },
+                    {
+                        "property": {
+                            "@id": "vocab:Book/ratings",
+                            "@type": "hydra:Link",
+                            "label": "ratings",
+                            "description": "The ratings associated with this book",
+                            "domain": "vocab:Book",
+                            "range": "http://www.w3.org/ns/hydra/core#Collection",
+                            "supportedOperation": [
+                                {
+                                    "@id": "_:book_ratings_create",
+                                    "@type": "hydra:Operation",
+                                    "method": "POST",
+                                    "label": "Creates a new ratings for a book",
+                                    "description": "Creates a new ratings for a book",
+                                    "expects": "vocab:Rating",
+                                    "returns": "vocab:Rating",
+                                },
+                                {
+                                    "@id": "_:book_rating_collection_retrieve",
+                                    "@type": "hydra:Operation",
+                                    "method": "GET",
+                                    "label": "Retrieves all ratings entities for a specific book",
+                                    "description": null,
+                                    "expects": null,
+                                    "returns": "http://www.w3.org/ns/hydra/core#Collection",
+                                    "statusCodes": []
+                                }
+                            ]
+                        },
+                        "hydra:title": "ratings",
+                        "hydra:description": "The ratings associated with this book",
+                        "required": null,
+                        "readonly": true,
+                        "writeonly": false
+                    }
+                ]
+            },
+
+            // Comment
+            {
+                "@id": "vocab:Comment",
+                "@type": "hydra:Class",
+                "subClassOf": null,
+                "label": "Comment",
+                "description": "Comment",
+                "supportedOperation": [
+                    {
+                        "@id": "_:comment_retrieve",
+                        "@type": "hydra:Operation",
+                        "method": "GET",
+                        "label": "Retrieves a Comment entity",
+                        "description": null,
+                        "expects": null,
+                        "returns": "vocab:Comment",
+                        "statusCodes": []
+                    }
+                ],
+                "supportedProperty": [
+                    {
+                        "property": {
+                            "@id": "vocab:Comment/comment",
+                            "@type": "rdf:Property",
+                            "label": "comment",
+                            "description": "The comment",
+                            "domain": "vocab:Comment",
+                            "range": "http://www.w3.org/2001/XMLSchema#string",
+                            "supportedOperation": []
+                        },
+                        "hydra:title": "comment",
+                        "hydra:description": "The comment",
+                        "required": null,
+                        "readonly": false,
+                        "writeonly": false
+                    },
+                    {
+                        "property": {
+                            "@id": "vocab:Comment/book",
+                            "@type": "hydra:Link",
+                            "label": "book",
+                            "description": "The book this comment belongs to",
+                            "domain": "vocab:Comment",
+                            "range": "vocab:Book",
+                            "supportedOperation": [
+                                {
+                                    "@id": "_:book_retrieve",
+                                    "@type": "hydra:Operation",
+                                    "method": "GET",
+                                    "label": "Retrieves a Book",
+                                    "description": null,
+                                    "expects": null,
+                                    "returns": "vocab:Book",
+                                    "statusCodes": []
+                                }
+                            ]
+                        },
+                        "hydra:title": "book",
+                        "hydra:description": "The book this comment belongs to",
+                        "required": null,
+                        "readonly": true,
+                        "writeonly": false
+                    },
+                ]
+            },
+
+            // Rating
+            {
+                "@id": "vocab:Rating",
+                "@type": "hydra:Class",
+                "subClassOf": null,
+                "label": "Rating",
+                "description": "Rating",
+                "supportedOperation": [
+                    {
+                        "@id": "_:rating_retrieve",
+                        "@type": "hydra:Operation",
+                        "method": "GET",
+                        "label": "Retrieves a Rating entity",
+                        "description": null,
+                        "expects": null,
+                        "returns": "vocab:Rating",
+                        "statusCodes": []
+                    }
+                ],
+                "supportedProperty": [
+                    {
+                        "property": {
+                            "@id": "vocab:Rating/rating",
+                            "@type": "rdf:Property",
+                            "label": "rating",
+                            "description": "The rating",
+                            "domain": "vocab:Rating",
+                            "range": "http://www.w3.org/2001/XMLSchema#string",
+                            "supportedOperation": []
+                        },
+                        "hydra:title": "rating",
+                        "hydra:description": "The rating",
+                        "required": null,
+                        "readonly": false,
+                        "writeonly": false
+                    },
+                    {
+                        "property": {
+                            "@id": "vocab:Rating/book",
+                            "@type": "hydra:Link",
+                            "label": "book",
+                            "description": "The book this rating belongs to",
+                            "domain": "vocab:Rating",
+                            "range": "vocab:Book",
+                            "supportedOperation": [
+                                {
+                                    "@id": "_:book_retrieve",
+                                    "@type": "hydra:Operation",
+                                    "method": "GET",
+                                    "label": "Retrieves a Book",
+                                    "description": null,
+                                    "expects": null,
+                                    "returns": "vocab:Book",
+                                    "statusCodes": []
+                                }
+                            ]
+                        },
+                        "hydra:title": "book",
+                        "hydra:description": "The book this rating belongs to",
+                        "required": null,
+                        "readonly": true,
+                        "writeonly": false
+                    },
+                ]
+            },
 
             //*************ENTRYPOINT***********************************
             {
@@ -480,6 +944,16 @@ app.get('/api/vocab', (req, res) => {
                                     returns: 'vocab:BookCollection',
                                     statusCodes: [],
                                 },
+                                {
+                                    '@id': '_:book_collection_search',
+                                    '@type': 'hydra:Operation',
+                                    method: 'POST',
+                                    label: 'Searches for books',
+                                    description: null,
+                                    expects: 'vocab:Query',
+                                    returns: 'vocab:BookCollection',
+                                    statusCodes: [],
+                                },
                             ],
                         },
 
@@ -508,6 +982,16 @@ app.get('/api/vocab', (req, res) => {
                                     description: null,
                                     expects: null,
                                     returns: 'vocab:AudioBookCollection',
+                                    statusCodes: [],
+                                },
+                                {
+                                    '@id': '_:audiobook_collection_search',
+                                    '@type': 'hydra:Operation',
+                                    method: 'POST',
+                                    label: 'Searches for audiobooks',
+                                    description: null,
+                                    expects: 'vocab:Query',
+                                    returns: 'vocab:BookCollection',
                                     statusCodes: [],
                                 },
                             ],
@@ -584,6 +1068,16 @@ app.get('/api/vocab', (req, res) => {
                                     returns: 'vocab:AuthorCollection',
                                     statusCodes: [],
                                 },
+                                {
+                                    '@id': '_:authors_collection_search',
+                                    '@type': 'hydra:Operation',
+                                    method: 'POST',
+                                    label: 'Searches for authors',
+                                    description: null,
+                                    expects: 'vocab:Query',
+                                    returns: 'vocab:AuthorCollection',
+                                    statusCodes: [],
+                                },
                             ],
                         },
                         'hydra:title': 'author',
@@ -645,6 +1139,114 @@ app.get('/api/contexts/AuthorCollection.jsonld', (req, res) => {
             AuthorCollection: 'vocab:AuthorCollection',
             members: 'http://www.w3.org/ns/hydra/core#member',
         },
+    };
+    res.send(e);
+});
+
+app.get('/api/contexts/CommentCollection.jsonld', (req, res) => {
+    setRes(res);
+    const e = {
+        '@context': {
+            hydra: 'http://www.w3.org/ns/hydra/core#',
+            vocab: `${liveUrl}/api/vocab#`,
+            CommentCollection: 'vocab:CommentCollection',
+            members: 'http://www.w3.org/ns/hydra/core#member',
+        },
+    };
+    res.send(e);
+});
+
+app.get('/api/contexts/RatingCollection.jsonld', (req, res) => {
+    setRes(res);
+    const e = {
+        '@context': {
+            hydra: 'http://www.w3.org/ns/hydra/core#',
+            vocab: `${liveUrl}/api/vocab#`,
+            CommentCollection: 'vocab:RatingCollection',
+            members: 'http://www.w3.org/ns/hydra/core#member',
+        },
+    };
+    res.send(e);
+});
+
+app.get('/api/contexts/Book.jsonld', (req, res) => {
+    setRes(res);
+    const e = {
+        "@context": {
+            "hydra": "http://www.w3.org/ns/hydra/core#",
+            "vocab": `${liveUrl}/api/vocab#`,
+            "Book": "vocab:Book",
+            "name": "vocab:Book/title",
+            "price": "vocab:Book/price",
+            "averageRating": "vocab:Book/averageRating",
+            "subject": "vocab:Book/subject",
+            "alternateName": "vocab:Book/alternateName",
+            "available": "vocab:Book/available",
+            "bookshelf": "vocab:Book/bookshelf",
+            "author": {
+                "@id": "vocab:Book/author",
+                "@type": "@id"
+            },
+            "comments": {
+                "@id": "vocab:Book/comments",
+                "@type": "@id"
+            },
+            "ratings": {
+                "@id": "vocab:Book/ratings",
+                "@type": "@id"
+            }
+        }
+    };
+    res.send(e);
+});
+
+app.get('/api/contexts/Author.jsonld', (req, res) => {
+    setRes(res);
+    const e = {
+        "@context": {
+            "hydra": "http://www.w3.org/ns/hydra/core#",
+            "vocab": `${liveUrl}/api/vocab#`,
+            "Book": "vocab:Author",
+            "name": "vocab:Author/name",
+            "books": {
+                "@id": "vocab:Author/books",
+                "@type": "@id"
+            }
+        }
+    };
+    res.send(e);
+});
+
+app.get('/api/contexts/Comment.jsonld', (req, res) => {
+    setRes(res);
+    const e = {
+        "@context": {
+            "hydra": "http://www.w3.org/ns/hydra/core#",
+            "vocab": `${liveUrl}/api/vocab#`,
+            "Comment": "vocab:Comment",
+            "comment": "vocab:Comment/comment",
+            "book": {
+                "@id": "vocab:Comment/book",
+                "@type": "@id"
+            }
+        }
+    };
+    res.send(e);
+});
+
+app.get('/api/contexts/Rating.jsonld', (req, res) => {
+    setRes(res);
+    const e = {
+        "@context": {
+            "hydra": "http://www.w3.org/ns/hydra/core#",
+            "vocab": `${liveUrl}/api/vocab#`,
+            "Comment": "vocab:Rating",
+            "rating": "vocab:Rating/rating",
+            "book": {
+                "@id": "vocab:Rating/book",
+                "@type": "@id"
+            }
+        }
     };
     res.send(e);
 });

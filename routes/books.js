@@ -14,10 +14,10 @@ const setRes = (res) => {
 };
 
 router.get('/', (req, res) => {
+    setRes(res);
     Books.find({}, {
         _id: 0, downloadOptions: 0, bookings: 0, buys: 0, totalQuantify: 0, author: 0,
-    }, (err, books) => {
-        setRes(res);
+    }, {limit: 100}, (err, books) => {
         const e = {
             '@context': '/api/contexts/BookCollection.jsonld',
             '@id': '/api/books/',
@@ -28,13 +28,14 @@ router.get('/', (req, res) => {
         books.forEach(function(b){
             let temp={
                 '@id': '/api/books/'+b.gutenbergId,
-                '@type': 'http://schema.org/Book',
+                '@type': 'vocab:Book',
             };
             e.members.push(temp)
         });
         res.send(e);
     });
 });
+
 
 router.get('/search', (req, res) => {
     if (!req.query.q) {
@@ -48,11 +49,45 @@ router.get('/search', (req, res) => {
     });
 });
 
+// new search
+router.post('/', (req, res) => {
+    setRes(res);
+    if (!req.body.query) {
+        const e = {
+            '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+            "@type": "Status",
+            "statusCode": 404,
+            "title": "No query param",
+        };
+        res.send(e);
+        return;
+    }
+    Books.find({ name: { $regex: `.*${req.body.query}.*`, $options: 'i' } }, {
+        _id: 0, downloadOptions: 0, bookings: 0, buys: 0, totalQuantify: 0, author: 0,
+    }, {limit: 100}, (err, books) => {
+        const e = {
+            '@context': '/api/contexts/BookCollection.jsonld',
+            '@id': '/api/books/',
+            '@type': 'BookCollection',
+            members: [
+            ],
+        };
+        books.forEach(function(b){
+            let temp={
+                '@id': '/api/books/'+b.gutenbergId,
+                '@type': 'vocab:Book',
+            };
+            e.members.push(temp)
+        });
+        res.send(e);
+    });
+});
+
 router.get('/:bookId', (req, res) => {
+    setRes(res);
     Books.findOne({ gutenbergId: req.params.bookId }, {
         _id: 0, downloadOptions: 0, bookings: 0, buys: 0, totalQuantify: 0,
     }, (err, book) => {
-        setRes(res);
         let authID=null;
         if(!book){
             const e = {
@@ -69,13 +104,19 @@ router.get('/:bookId', (req, res) => {
             authID='/api/authors/'+book.authorGutenbergId;
         }
         const e = {
-            '@context': 'http://schema.org/',
+            '@context': liveUrl + '/api/contexts/Book.jsonld',
             '@id': '/api/books/' + req.params.bookId,
             '@type': 'Book',
             name: book.name,
             price: book.price,
+            averageRating: book.averageRating,
+            subject: book.subject,
+            bookshelf: book.bookshelf,
+            alternateName: book.alternateName,
+            available: book.availableQuantify,
             author: authID,
             comments:'/api/books/' + req.params.bookId+'/comments',
+            ratings:'/api/books/' + req.params.bookId+'/ratings',
         };
 
         res.send(e);
@@ -233,67 +274,217 @@ router.patch('/:bookId', (req, res) => { //rent
     });
 });
 
-router.post('/:bookId/comment', (req, res) => {
-    if (!req.body.username || !req.body.password) {
-        res.status(400).json({ message: 'missing username or password', status: 'NOT OK' });
-        return;
-    }
-
-    if (!req.body.comment) {
-        res.status(400).json({ message: 'missing comment', status: 'NOT OK' });
-        return;
-    }
-
-    User.findOne({ username: req.body.username, password: req.body.password }, (err, existingUser) => {
-        if (existingUser) {
-            Books.findOne(
-                { gutenbergId: req.params.bookId },
-                (err, book) => {
-                    if (book) {
-                        book.comments.push({ author: existingUser._id, comment: req.body.comment });
-                        book.save();
-                        res.json({ message: 'comment saved', status: 'OK' });
-                    } else {
-                        res.status(400).json({ message: 'book not found', status: 'NOT OK' });
-                    }
-                },
-            );
-        } else {
-            res.status(400).json({ message: 'error getting user.. check your input', status: 'NOT OK' });
-        }
-    });
+router.get('/:bookId/comments', (req, res) => {
+    setRes(res);
+    Books.findOne(
+        { gutenbergId: req.params.bookId },
+        (err, book) => {
+            if (book) {
+                const e = {
+                    '@context': '/api/contexts/CommentCollection.jsonld',
+                    '@id': '/api/books/',
+                    '@type': 'CommentCollection',
+                    members: [
+                    ],
+                };
+                book.comments.forEach(function(c, i){
+                    let temp={
+                        '@id': '/api/books/'+ book.gutenbergId + '/comments/' + i,
+                        '@type': 'vocab:Comment',
+                    };
+                    e.members.push(temp)
+                });
+                res.send(e);
+            } else {
+                const e = {
+                    '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+                    "@type": "Status",
+                    "statusCode": 404,
+                    "title": "Book not found",
+                    "description": "Error getting book",
+                };
+                res.send(e);
+            }
+        },
+    );
 });
 
-router.post('/:bookId/rate', (req, res) => {
-    if (!req.body.username || !req.body.password) {
-        res.status(400).json({ message: 'missing username or password', status: 'NOT OK' });
+router.get('/:bookId/comments/:commentId', (req, res) => {
+    setRes(res);
+    Books.findOne(
+        { gutenbergId: req.params.bookId },
+        (err, book) => {
+            if (book) {
+                const e = {
+                    '@context': liveUrl + '/api/contexts/Comment.jsonld',
+                    '@id': '/api/books/' + req.params.bookId + '/comments/' + req.params.commentId,
+                    '@type': 'Comment',
+                    comment: book.comments[req.params.commentId].comment,
+                    'book': '/api/books/' + req.params.bookId
+                };
+                res.send(e);
+            } else {
+                const e = {
+                    '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+                    "@type": "Status",
+                    "statusCode": 404,
+                    "title": "Book not found",
+                    "description": "Error getting book",
+                };
+                res.send(e);
+            }
+        },
+    );
+
+});
+
+router.post('/:bookId/comments', (req, res) => {
+    setRes(res);
+
+    if (!req.body.comment) {
+        const e = {
+            '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+            "@type": "Status",
+            "statusCode": 400,
+            "title": "No comment found",
+            "description": "No comment found",
+        };
+        res.send(e);
+        return;
+    }
+    Books.findOne(
+        { gutenbergId: req.params.bookId },
+        (err, book) => {
+            if (book) {
+                book.comments.push({ comment: req.body.comment });
+                book.save();
+                const e = {
+                    '@context': liveUrl + '/api/contexts/Comment.jsonld',
+                    '@id': '/api/books/' + req.params.bookId + '/comments/' + (book.comments.length -1),
+                    '@type': 'Comment',
+                    comment: req.body.comment,
+                    'book': '/api/books/' + req.params.bookId
+                };
+                res.send(e);
+            } else {
+                const e = {
+                    '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+                    "@type": "Status",
+                    "statusCode": 404,
+                    "title": "Book not found",
+                    "description": "Book not found",
+                };
+                res.send(e);
+            }
+        },
+    );
+});
+
+router.get('/:bookId/ratings', (req, res) => {
+    setRes(res);
+    Books.findOne(
+        { gutenbergId: req.params.bookId },
+        (err, book) => {
+            if (book) {
+                const e = {
+                    '@context': '/api/contexts/RatingCollection.jsonld',
+                    '@id': '/api/books/',
+                    '@type': 'RatingCollection',
+                    members: [
+                    ],
+                };
+                book.ratings.forEach(function(c, i){
+                    let temp={
+                        '@id': '/api/books/'+ book.gutenbergId + '/ratings/' + i,
+                        '@type': 'vocab:Rating',
+                    };
+                    e.members.push(temp)
+                });
+                res.send(e);
+            } else {
+                const e = {
+                    '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+                    "@type": "Status",
+                    "statusCode": 404,
+                    "title": "Book not found",
+                    "description": "Error getting book",
+                };
+                res.send(e);
+            }
+        },
+    );
+});
+
+router.get('/:bookId/ratings/:ratingId', (req, res) => {
+    setRes(res);
+    Books.findOne(
+        { gutenbergId: req.params.bookId },
+        (err, book) => {
+            if (book) {
+                const e = {
+                    '@context': liveUrl + '/api/contexts/Rating.jsonld',
+                    '@id': '/api/books/' + req.params.bookId + '/ratings/' + req.params.commentId,
+                    '@type': 'Rating',
+                    rating: book.ratings[req.params.ratingId].rating,
+                    'book': '/api/books/' + req.params.bookId
+                };
+                res.send(e);
+            } else {
+                const e = {
+                    '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+                    "@type": "Status",
+                    "statusCode": 404,
+                    "title": "Book not found",
+                    "description": "Error getting book",
+                };
+                res.send(e);
+            }
+        },
+    );
+
+});
+
+router.post('/:bookId/ratings', (req, res) => {
+    setRes(res);
+    const rating = Number(req.body.rating);
+    if (!req.body.rating || isNaN(rating)) {
+        const e = {
+            '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+            "@type": "Status",
+            "statusCode": 404,
+            "title": "Set a valid rating",
+        };
+        res.send(e);
         return;
     }
 
-    if (!req.body.rating || typeof req.body.rating !== 'number') {
-        res.status(400).json({ message: 'missing rating or wrong', status: 'NOT OK' });
-        return;
-    }
+    Books.findOne(
+        { gutenbergId: req.params.bookId },
+        (err, book) => {
+            if (book) {
+                book.ratings.push({ rating: req.body.rating });
+                book.averageRating = book.ratings.reduce((acc, curr) => acc + curr.rating, 0) / book.ratings.length;
+                book.save();
+                const e = {
+                    '@context': liveUrl + '/api/contexts/Rating.jsonld',
+                    '@id': '/api/books/' + req.params.bookId + '/ratings/' + (book.ratings.length - 1),
+                    '@type': 'Rating',
+                    rating: req.body.rating,
+                    'book': '/api/books/' + req.params.bookId
+                };
+                res.send(e);
+            } else {
+                const e = {
+                    '@context': 'http://www.w3.org/ns/hydra/context.jsonld',
+                    "@type": "Status",
+                    "statusCode": 404,
+                    "title": "Book not found",
+                };
+                res.send(e);
+            }
+        },
+    );
 
-    User.findOne({ username: req.body.username, password: req.body.password }, (err, existingUser) => {
-        if (existingUser) {
-            Books.findOne(
-                { gutenbergId: req.params.bookId },
-                (err, book) => {
-                    if (book) {
-                        book.ratings.push({ author: existingUser._id, rating: req.body.rating });
-                        book.averageRating = book.ratings.reduce((acc, curr) => acc + curr.rating, 0) / book.ratings.length;
-                        book.save();
-                        res.json({ message: 'rating saved', status: 'OK' });
-                    } else {
-                        res.status(400).json({ message: 'book not found', status: 'NOT OK' });
-                    }
-                },
-            );
-        } else {
-            res.status(400).json({ message: 'error getting user.. check your input', status: 'NOT OK' });
-        }
-    });
 });
 
 router.put('/:bookId/', (req, res) => { //return
