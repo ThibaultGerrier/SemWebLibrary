@@ -2,9 +2,18 @@ const request = require('request');
 //const prompt = require('prompt');
 const prompt = require("prompt-async");
 prompt.start();
-const url='http://localhost:3000';
+let url='http://localhost:3000';
 let globalDescription;
 
+let begin=()=>{
+    console.log('Please enter the url, or leave empty for localhost');
+    prompt.get(['url'], function (err, result) {
+        if(result.url){
+            url=result.url;
+        }
+        start();
+    });
+};
 let start=()=>{
     request(url+'/api/vocab', function (error, response, body) {
         body=JSON.parse(body);
@@ -15,7 +24,8 @@ let start=()=>{
         let entrypoints=[];
         let link;
         let i=0;
-        body.supportedClass[8].supportedProperty.forEach(function(e){
+        let num=getEntryNumber(body);
+        body.supportedClass[num].supportedProperty.forEach(function(e){
             console.log(i+': '+e['hydra:title']+' - '+e['hydra:description']);
             entrypoints.push(e.property.supportedOperation);
             i++;
@@ -24,7 +34,7 @@ let start=()=>{
         console.log('Please enter a number to choose one');
         prompt.get(['number'], function (err, result) {
             //console.log('  number: ' + result.number);
-            link=body.supportedClass[8].supportedProperty[result.number].property['@id'];
+            link=body.supportedClass[num].supportedProperty[result.number].property['@id'];
             let actionsTodo=entrypoints[result.number];
             let j=0;
             console.log('You can do here: ');
@@ -145,8 +155,13 @@ let handleCollection = (coll)=>{
     let type=coll.members[0]['@type'];
     prompt.get(['id'], function (err, result) {
         let link=result.id;
-        let supActions=getExpActions(type);
-        askForActions(supActions,link);
+        if(link.indexOf('/')===-1){
+            console.log('This is not an id, please try again!');
+            handleCollection(coll)
+        }else{
+            let supActions=getExpActions(type);
+            askForActions(supActions,link);
+        }
     });
 
 };
@@ -175,4 +190,17 @@ let searchTypeByPropName = (type, property)=>{
     return result;
 };
 
-start();
+let getEntryNumber = (body)=>{
+    let r=0;
+    let result;
+    body.supportedClass.forEach(function (e){
+        if(e['@id'].indexOf('EntryPoint')!==-1){
+            result=r;
+
+        }
+        r++;
+    });
+    return result;
+};
+
+begin();
