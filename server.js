@@ -18,7 +18,7 @@ let CONFIG = require('./config/default.json');
 
 const liveUrl = CONFIG.liveUrl;
 
-mongoose.connect('mongodb://localhost/semweblibrary');
+mongoose.connect('mongodb://test:test1A@ds221631.mlab.com:21631/swshydralibrary');
 
 app.get('/', (req, res) => {
     res.send('Hello World!');
