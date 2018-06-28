@@ -2,11 +2,11 @@ const request = require('request');
 //const prompt = require('prompt');
 const prompt = require("prompt-async");
 prompt.start();
-let url='http://localhost:3000';
+let url='https://young-wave-55827.herokuapp.com';
 let globalDescription;
 
 let begin=()=>{
-    console.log('Please enter the url, or leave empty for localhost');
+    console.log('Please enter the url, or leave empty for default');
     prompt.get(['url'], function (err, result) {
         if(result.url){
             url=result.url;
