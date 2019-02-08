@@ -4,7 +4,7 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "start:":"node server.js",
+    "start:": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -13,10 +13,10 @@
     "body-parser": "latest",
     "config": "latest",
     "express": "latest",
-    "mongoose": "^5.0.17",
-    "morgan": "latest",
+    "mongoose": "^5.4.10",
+    "morgan": "^1.9.1",
     "prompt-async": "^0.9.9",
-    "request": "^2.85.0",
+    "request": "^2.88.0",
     "xml2js": "latest"
   }
 }
